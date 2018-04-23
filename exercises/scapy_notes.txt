@@ -1,0 +1,16 @@
+from scapy import all;
+
+longpayload='A'*1300;
+
+packet=IP(dst="www.google.com")/ICMP()/longpayload;
+sr1(packet);
+
+httppayload="GET / HTTP/1.1\r\nHost:www.google.com\r\n\r\n" + longpayload + "\r\n\r\n\r\n"
+
+packet=IP(dst="www.google.com",proto="tcp")/TCP(sport=31337,dport=80)/httppayload;
+
+dataOnSyn=sr1(packet);
+
+normalHttpRequest = IP(dst='www.google.com',proto="tcp")/TCP(dport=80, sport=packet.sport, seq=dataOnSyn[TCP].ack, ack=dataOnSyn[TCP].seq + 1, flags='A')/httppayload
+
+googleResponse=sr1(normalHttpRequest);
